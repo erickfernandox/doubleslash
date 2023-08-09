@@ -54,6 +54,8 @@ func checkDoubleSlashInHTML(urlStr string) bool {
 			if parsedURL.Path != "//" && parsedURL.Path != "" {
 				if strings.Contains(htmlLine, "=\""+parsedURL.Path) {
 					return true
+				} else if strings.Contains(htmlLine, "=\"https:"+parsedURL.Path) {
+					return true
 				}
 			}
 		}

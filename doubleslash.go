@@ -16,7 +16,7 @@ const (
 )
 
 func addDoubleSlash(urlStr string) string {
-	if strings.HasPrefix(urlStr, "https://") && !strings.HasPrefix(urlStr, "https:////") {
+	if strings.HasPrefix(urlStr, "https://") || strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https:////") {
 		parts := strings.Split(urlStr, "/")
 
 		if len(parts) > 3 {
@@ -51,7 +51,7 @@ func checkDoubleSlashInHTML(urlStr string) bool {
 		for scanner.Scan() {
 			htmlLine := scanner.Text()
 			parsedURL, _ := url.Parse(urlStr)
-			if parsedURL.Path != "" {
+			if parsedURL.Path != "//" && parsedURL.Path != "" {
 				if strings.Contains(htmlLine, "=\""+parsedURL.Path) {
 					return true
 				}

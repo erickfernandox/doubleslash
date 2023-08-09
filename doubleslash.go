@@ -22,12 +22,12 @@ func addDoubleSlash(urlStr string) string {
 		if len(parts) > 3 {
 			parts[2] += "/"
 			newURL := strings.Join(parts, "/")
-			return newURL
+			return newURL + "/"
 		} else {
-			return urlStr
+			return urlStr + "/"
 		}
 	} else {
-		return urlStr
+		return urlStr + "/"
 	}
 }
 
@@ -51,10 +51,11 @@ func checkDoubleSlashInHTML(urlStr string) bool {
 		for scanner.Scan() {
 			htmlLine := scanner.Text()
 			parsedURL, _ := url.Parse(urlStr)
-			if parsedURL.Path != "//" && parsedURL.Path != "" {
+
+			if parsedURL.Path != "///" && parsedURL.Path != "/" && parsedURL.Path != "" {
 				if strings.Contains(htmlLine, "=\""+parsedURL.Path) {
 					return true
-				} else if strings.Contains(htmlLine, "=\"https:"+parsedURL.Path+"/") {
+				} else if strings.Contains(htmlLine, "=\"https:"+parsedURL.Path) {
 					return true
 				}
 			}

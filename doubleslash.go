@@ -8,11 +8,13 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
 const (
 	timeoutInSeconds = 5
+	concurrentLimit  = 10
 )
 
 func addDoubleSlash(urlStr string) string {
@@ -31,18 +33,20 @@ func addDoubleSlash(urlStr string) string {
 	}
 }
 
-func checkDoubleSlashInHTML(urlStr string) bool {
+func checkDoubleSlashInHTML(urlStr string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	client := http.Client{
 		Timeout: timeoutInSeconds * time.Second,
 	}
 	req, err := http.NewRequest("GET", urlStr, nil)
 	if err != nil {
-		return false
+		return
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return false
+		return
 	}
 	defer resp.Body.Close()
 
@@ -54,15 +58,16 @@ func checkDoubleSlashInHTML(urlStr string) bool {
 
 			if parsedURL.Path != "///" && parsedURL.Path != "/" && parsedURL.Path != "" {
 				if strings.Contains(htmlLine, "=\""+parsedURL.Path) {
-					return true
+					fmt.Printf("\033[32m[Reflected] %s\033[0m\n", urlStr)
+					return
 				} else if strings.Contains(htmlLine, "=\"https:"+parsedURL.Path) {
-					return true
+					fmt.Printf("\033[32m[Reflected] %s\033[0m\n", urlStr)
+					return
 				}
 			}
 		}
 	}
-
-	return false
+	fmt.Println("[Not reflected]", urlStr)
 }
 
 func main() {
@@ -92,11 +97,17 @@ func main() {
 		newURLs = append(newURLs, addDoubleSlash(strings.TrimSpace(url)))
 	}
 
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, concurrentLimit)
+
 	for _, newURL := range newURLs {
-		if checkDoubleSlashInHTML(newURL) {
-			fmt.Printf("\033[32m[Reflected] %s\033[0m\n", newURL)
-		} else {
-			fmt.Println("[Not reflected]", newURL)
-		}
+		wg.Add(1)
+		go func(urlStr string) {
+			semaphore <- struct{}{}
+			checkDoubleSlashInHTML(urlStr, &wg)
+			<-semaphore
+		}(newURL)
 	}
+
+	wg.Wait()
 }

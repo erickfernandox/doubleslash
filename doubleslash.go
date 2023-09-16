@@ -22,14 +22,14 @@ func addDoubleSlash(urlStr string) string {
 		parts := strings.Split(urlStr, "/")
 
 		if len(parts) > 3 {
-			parts[2] += "%0A/"
+			parts[2] += "/"
 			newURL := strings.Join(parts, "/")
-			return newURL + "%0A/"
+			return newURL + "/"
 		} else {
-			return urlStr + "%0A/"
+			return urlStr + "/"
 		}
 	} else {
-		return urlStr + "%0A/"
+		return urlStr + "/"
 	}
 }
 
